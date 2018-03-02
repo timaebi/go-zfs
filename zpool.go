@@ -1,5 +1,7 @@
 package zfs
 
+import "github.com/timaebi/go-zfs/zfsiface"
+
 // ZFS zpool states, which can indicate if a pool is online, offline,
 // degraded, etc.  More information regarding zpool states can be found here:
 // https://docs.oracle.com/cd/E19253-01/819-5461/gamno/index.html.
@@ -53,12 +55,12 @@ func GetZpool(name string) (*Zpool, error) {
 }
 
 // Datasets returns a slice of all ZFS datasets in a zpool.
-func (z *Zpool) Datasets() ([]*Dataset, error) {
+func (z *Zpool) Datasets() ([]zfsiface.Dataset, error) {
 	return Datasets(z.Name)
 }
 
 // Snapshots returns a slice of all ZFS snapshots in a zpool.
-func (z *Zpool) Snapshots() ([]*Dataset, error) {
+func (z *Zpool) Snapshots() ([]zfsiface.Dataset, error) {
 	return Snapshots(z.Name)
 }
 

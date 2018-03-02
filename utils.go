@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/pborman/uuid"
+	"github.com/timaebi/go-zfs/zfsiface"
 )
 
 type command struct {
@@ -173,22 +174,22 @@ func unescapeFilepath(path string) (string, error) {
 	return string(buf), nil
 }
 
-var changeTypeMap = map[string]ChangeType{
-	"-": Removed,
-	"+": Created,
-	"M": Modified,
-	"R": Renamed,
+var changeTypeMap = map[string]zfsiface.ChangeType{
+	"-": zfsiface.Removed,
+	"+": zfsiface.Created,
+	"M": zfsiface.Modified,
+	"R": zfsiface.Renamed,
 }
-var inodeTypeMap = map[string]InodeType{
-	"B": BlockDevice,
-	"C": CharacterDevice,
-	"/": Directory,
-	">": Door,
-	"|": NamedPipe,
-	"@": SymbolicLink,
-	"P": EventPort,
-	"=": Socket,
-	"F": File,
+var inodeTypeMap = map[string]zfsiface.InodeType{
+	"B": zfsiface.BlockDevice,
+	"C": zfsiface.CharacterDevice,
+	"/": zfsiface.Directory,
+	">": zfsiface.Door,
+	"|": zfsiface.NamedPipe,
+	"@": zfsiface.SymbolicLink,
+	"P": zfsiface.EventPort,
+	"=": zfsiface.Socket,
+	"F": zfsiface.File,
 }
 
 // matches (+1) or (-1)
@@ -202,7 +203,7 @@ func parseReferenceCount(field string) (int, error) {
 	return strconv.Atoi(matches[1])
 }
 
-func parseInodeChange(line []string) (*InodeChange, error) {
+func parseInodeChange(line []string) (*zfsiface.InodeChange, error) {
 	llen := len(line)
 	if llen < 1 {
 		return nil, fmt.Errorf("Empty line passed")
@@ -214,11 +215,11 @@ func parseInodeChange(line []string) (*InodeChange, error) {
 	}
 
 	switch changeType {
-	case Renamed:
+	case zfsiface.Renamed:
 		if llen != 4 {
 			return nil, fmt.Errorf("Mismatching number of fields: expect 4, got: %d", llen)
 		}
-	case Modified:
+	case zfsiface.Modified:
 		if llen != 4 && llen != 3 {
 			return nil, fmt.Errorf("Mismatching number of fields: expect 3..4, got: %d", llen)
 		}
@@ -241,12 +242,12 @@ func parseInodeChange(line []string) (*InodeChange, error) {
 	var newPath string
 	var referenceCount int
 	switch changeType {
-	case Renamed:
+	case zfsiface.Renamed:
 		newPath, err = unescapeFilepath(line[3])
 		if err != nil {
 			return nil, fmt.Errorf("Failed to parse filename: %v", err)
 		}
-	case Modified:
+	case zfsiface.Modified:
 		if llen == 4 {
 			referenceCount, err = parseReferenceCount(line[3])
 			if err != nil {
@@ -257,7 +258,7 @@ func parseInodeChange(line []string) (*InodeChange, error) {
 		newPath = ""
 	}
 
-	return &InodeChange{
+	return &zfsiface.InodeChange{
 		Change:               changeType,
 		Type:                 inodeType,
 		Path:                 path,
@@ -271,8 +272,8 @@ func parseInodeChange(line []string) (*InodeChange, error) {
 //+       F       /testpool/bar/hello.txt
 //M       /       /testpool/bar/hello.txt (+1)
 //M       /       /testpool/bar/hello-hardlink
-func parseInodeChanges(lines [][]string) ([]*InodeChange, error) {
-	changes := make([]*InodeChange, len(lines))
+func parseInodeChanges(lines [][]string) ([]*zfsiface.InodeChange, error) {
+	changes := make([]*zfsiface.InodeChange, len(lines))
 
 	for i, line := range lines {
 		c, err := parseInodeChange(line)
@@ -284,7 +285,7 @@ func parseInodeChanges(lines [][]string) ([]*InodeChange, error) {
 	return changes, nil
 }
 
-func listByType(t, filter string) ([]*Dataset, error) {
+func listByType(t, filter string) ([]zfsiface.Dataset, error) {
 	args := []string{"list", "-rHp", "-t", t, "-o", dsPropListOptions}
 
 	if filter != "" {
@@ -295,7 +296,7 @@ func listByType(t, filter string) ([]*Dataset, error) {
 		return nil, err
 	}
 
-	var datasets []*Dataset
+	var datasets []zfsiface.Dataset
 
 	name := ""
 	var ds *Dataset
