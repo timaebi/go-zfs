@@ -245,6 +245,20 @@ func (d *Dataset) SendSnapshot(output io.Writer) error {
 	return err
 }
 
+// SendIncrementalSnapshot sends a ZFS stream of a incremental snapshot based on base to the input io.Writer.
+// An error will be returned if the input dataset, or base is not of snapshot type.
+func (d *Dataset) SendIncrementalSnapshot(base *Dataset, output io.Writer) error {
+	if d.Type != DatasetSnapshot {
+		return errors.New("can only send snapshots")
+	}
+	if base.Type != DatasetSnapshot {
+		return errors.New("base needs to be a snapshot")
+	}
+	c := command{Command: "zfs", Stdout: output}
+	_, err := c.Run("send", "-i", base.Name, d.Name)
+	return err
+}
+
 // CreateVolume creates a new ZFS volume with the specified name, size, and
 // properties.
 // A full list of available ZFS properties may be found here:
