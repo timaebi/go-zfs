@@ -303,7 +303,7 @@ func listByType(t, filter string) ([]zfsiface.Dataset, error) {
 	for _, line := range out {
 		if name != line[0] {
 			name = line[0]
-			ds = &Dataset{Name: name}
+			ds = &Dataset{zfsiface.NativeProperties{Name: name}}
 			datasets = append(datasets, ds)
 		}
 		if err := ds.parseLine(line); err != nil {

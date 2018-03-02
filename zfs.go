@@ -24,19 +24,11 @@ const (
 // The field definitions can be found in the ZFS manual:
 // http://www.freebsd.org/cgi/man.cgi?zfs(8).
 type Dataset struct {
-	Name          string
-	Origin        string
-	Used          uint64
-	Avail         uint64
-	Mountpoint    string
-	Compression   string
-	Type          string
-	Written       uint64
-	Volsize       uint64
-	Logicalused   uint64
-	Usedbydataset uint64
-	Quota         uint64
-	Referenced    uint64
+	zfsiface.NativeProperties
+}
+
+func (d *Dataset) GetNativeProperties() *zfsiface.NativeProperties {
+	return &d.NativeProperties
 }
 
 // Logger can be used to log commands/actions
@@ -102,7 +94,7 @@ func GetDataset(name string) (zfsiface.Dataset, error) {
 		return nil, err
 	}
 
-	ds := &Dataset{Name: name}
+	ds := &Dataset{zfsiface.NativeProperties{Name: name}}
 	for _, line := range out {
 		if err := ds.parseLine(line); err != nil {
 			return nil, err
@@ -390,7 +382,7 @@ func (d *Dataset) Children(depth uint64) ([]zfsiface.Dataset, error) {
 	for _, line := range out {
 		if name != line[0] {
 			name = line[0]
-			ds = &Dataset{Name: name}
+			ds = &Dataset{zfsiface.NativeProperties{Name: name}}
 			datasets = append(datasets, ds)
 		}
 		if err := ds.parseLine(line); err != nil {

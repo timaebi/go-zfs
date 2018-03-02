@@ -13,6 +13,7 @@ import (
 
 	"github.com/timaebi/go-zfs"
 	"strings"
+	"github.com/timaebi/go-zfs/zfsiface"
 )
 
 func sleep(delay int) {
@@ -85,11 +86,12 @@ func TestDatasets(t *testing.T) {
 		ok(t, err)
 
 		ds, err := zfs.GetDataset("test")
+		np:= ds.GetNativeProperties()
 		ok(t, err)
-		equals(t, zfs.DatasetFilesystem, ds.Type)
-		equals(t, "", ds.Origin)
+		equals(t, zfs.DatasetFilesystem, np.Type)
+		equals(t, "", np.Origin)
 		if runtime.GOOS != "solaris" {
-			assert(t, ds.Logicalused != 0, "Logicalused is not greater than 0")
+			assert(t, np.Logicalused != 0, "Logicalused is not greater than 0")
 		}
 	})
 }
@@ -122,7 +124,7 @@ func TestSnapshots(t *testing.T) {
 		ok(t, err)
 
 		for _, snapshot := range snapshots {
-			equals(t, zfs.DatasetSnapshot, snapshot.Type)
+			equals(t, zfs.DatasetSnapshot, snapshot.(*zfs.Dataset).Type)
 		}
 	})
 }
@@ -136,10 +138,10 @@ func TestFilesystems(t *testing.T) {
 		ok(t, err)
 
 		for _, filesystem := range filesystems {
-			equals(t, zfs.DatasetFilesystem, filesystem.Type)
+			equals(t, zfs.DatasetFilesystem, filesystem.(*zfs.Dataset).Type)
 		}
 
-		ok(t, f.Destroy(zfs.DestroyDefault))
+		ok(t, f.Destroy(zfsiface.DestroyDefault))
 	})
 }
 
@@ -152,16 +154,16 @@ func TestCreateFilesystemWithProperties(t *testing.T) {
 		f, err := zfs.CreateFilesystem("test/filesystem-test", props)
 		ok(t, err)
 
-		equals(t, "lz4", f.Compression)
+		equals(t, "lz4", f.(*zfs.Dataset).Compression)
 
 		filesystems, err := zfs.Filesystems("")
 		ok(t, err)
 
 		for _, filesystem := range filesystems {
-			equals(t, zfs.DatasetFilesystem, filesystem.Type)
+			equals(t, zfs.DatasetFilesystem, filesystem.(*zfs.Dataset).Type)
 		}
 
-		ok(t, f.Destroy(zfs.DestroyDefault))
+		ok(t, f.Destroy(zfsiface.DestroyDefault))
 	})
 }
 
@@ -173,15 +175,15 @@ func TestVolumes(t *testing.T) {
 		// volumes are sometimes "busy" if you try to manipulate them right away
 		sleep(1)
 
-		equals(t, zfs.DatasetVolume, v.Type)
+		equals(t, zfs.DatasetVolume, v.(*zfs.Dataset).Type)
 		volumes, err := zfs.Volumes("")
 		ok(t, err)
 
 		for _, volume := range volumes {
-			equals(t, zfs.DatasetVolume, volume.Type)
+			equals(t, zfs.DatasetVolume, volume.(*zfs.Dataset).Type)
 		}
 
-		ok(t, v.Destroy(zfs.DestroyDefault))
+		ok(t, v.Destroy(zfsiface.DestroyDefault))
 	})
 }
 
@@ -194,19 +196,19 @@ func TestSnapshot(t *testing.T) {
 		ok(t, err)
 
 		for _, filesystem := range filesystems {
-			equals(t, zfs.DatasetFilesystem, filesystem.Type)
+			equals(t, zfs.DatasetFilesystem, filesystem.(*zfs.Dataset).Type)
 		}
 
 		s, err := f.Snapshot("test", false)
 		ok(t, err)
 
-		equals(t, zfs.DatasetSnapshot, s.Type)
+		equals(t, zfs.DatasetSnapshot, s.(*zfs.Dataset).Type)
 
-		equals(t, "test/snapshot-test@test", s.Name)
+		equals(t, "test/snapshot-test@test", s.(*zfs.Dataset).Name)
 
-		ok(t, s.Destroy(zfs.DestroyDefault))
+		ok(t, s.Destroy(zfsiface.DestroyDefault))
 
-		ok(t, f.Destroy(zfs.DestroyDefault))
+		ok(t, f.Destroy(zfsiface.DestroyDefault))
 	})
 }
 
@@ -219,25 +221,25 @@ func TestClone(t *testing.T) {
 		ok(t, err)
 
 		for _, filesystem := range filesystems {
-			equals(t, zfs.DatasetFilesystem, filesystem.Type)
+			equals(t, zfs.DatasetFilesystem, filesystem.(*zfs.Dataset).Type)
 		}
 
 		s, err := f.Snapshot("test", false)
 		ok(t, err)
 
-		equals(t, zfs.DatasetSnapshot, s.Type)
-		equals(t, "test/snapshot-test@test", s.Name)
+		equals(t, zfs.DatasetSnapshot, s.(*zfs.Dataset).Type)
+		equals(t, "test/snapshot-test@test", s.(*zfs.Dataset).Name)
 
 		c, err := s.Clone("test/clone-test", nil)
 		ok(t, err)
 
-		equals(t, zfs.DatasetFilesystem, c.Type)
+		equals(t, zfs.DatasetFilesystem, c.(*zfs.Dataset).Type)
 
-		ok(t, c.Destroy(zfs.DestroyDefault))
+		ok(t, c.Destroy(zfsiface.DestroyDefault))
 
-		ok(t, s.Destroy(zfs.DestroyDefault))
+		ok(t, s.Destroy(zfsiface.DestroyDefault))
 
-		ok(t, f.Destroy(zfs.DestroyDefault))
+		ok(t, f.Destroy(zfsiface.DestroyDefault))
 	})
 }
 
@@ -250,7 +252,7 @@ func TestSendSnapshot(t *testing.T) {
 		ok(t, err)
 
 		for _, filesystem := range filesystems {
-			equals(t, zfs.DatasetFilesystem, filesystem.Type)
+			equals(t, zfs.DatasetFilesystem, filesystem.(*zfs.Dataset).Type)
 		}
 
 		s, err := f.Snapshot("test", false)
@@ -265,9 +267,9 @@ func TestSendSnapshot(t *testing.T) {
 		err = s.SendSnapshot(file)
 		ok(t, err)
 
-		ok(t, s.Destroy(zfs.DestroyDefault))
+		ok(t, s.Destroy(zfsiface.DestroyDefault))
 
-		ok(t, f.Destroy(zfs.DestroyDefault))
+		ok(t, f.Destroy(zfsiface.DestroyDefault))
 	})
 }
 
@@ -279,17 +281,17 @@ func TestChildren(t *testing.T) {
 		s, err := f.Snapshot("test", false)
 		ok(t, err)
 
-		equals(t, zfs.DatasetSnapshot, s.Type)
-		equals(t, "test/snapshot-test@test", s.Name)
+		equals(t, zfs.DatasetSnapshot, s.(*zfs.Dataset).Type)
+		equals(t, "test/snapshot-test@test", s.(*zfs.Dataset).Name)
 
 		children, err := f.Children(0)
 		ok(t, err)
 
 		equals(t, 1, len(children))
-		equals(t, "test/snapshot-test@test", children[0].Name)
+		equals(t, "test/snapshot-test@test", children[0].(*zfs.Dataset).Name)
 
-		ok(t, s.Destroy(zfs.DestroyDefault))
-		ok(t, f.Destroy(zfs.DestroyDefault))
+		ok(t, s.Destroy(zfsiface.DestroyDefault))
+		ok(t, f.Destroy(zfsiface.DestroyDefault))
 	})
 }
 
@@ -316,7 +318,7 @@ func TestRollback(t *testing.T) {
 		ok(t, err)
 
 		for _, filesystem := range filesystems {
-			equals(t, zfs.DatasetFilesystem, filesystem.Type)
+			equals(t, zfs.DatasetFilesystem, filesystem.(*zfs.Dataset).Type)
 		}
 
 		s1, err := f.Snapshot("test", false)
@@ -337,9 +339,9 @@ func TestRollback(t *testing.T) {
 		err = s1.Rollback(true)
 		ok(t, err)
 
-		ok(t, s1.Destroy(zfs.DestroyDefault))
+		ok(t, s1.Destroy(zfsiface.DestroyDefault))
 
-		ok(t, f.Destroy(zfs.DestroyDefault))
+		ok(t, f.Destroy(zfsiface.DestroyDefault))
 	})
 }
 
@@ -348,16 +350,16 @@ func TestDiff(t *testing.T) {
 		fs, err := zfs.CreateFilesystem("test/origin", nil)
 		ok(t, err)
 
-		linkedFile, err := os.Create(filepath.Join(fs.Mountpoint, "linked"))
+		linkedFile, err := os.Create(filepath.Join(fs.(*zfs.Dataset).Mountpoint, "linked"))
 		ok(t, err)
 
-		movedFile, err := os.Create(filepath.Join(fs.Mountpoint, "file"))
+		movedFile, err := os.Create(filepath.Join(fs.(*zfs.Dataset).Mountpoint, "file"))
 		ok(t, err)
 
 		snapshot, err := fs.Snapshot("snapshot", false)
 		ok(t, err)
 
-		unicodeFile, err := os.Create(filepath.Join(fs.Mountpoint, "i ❤ unicode"))
+		unicodeFile, err := os.Create(filepath.Join(fs.(*zfs.Dataset).Mountpoint, "i ❤ unicode"))
 		ok(t, err)
 
 		err = os.Rename(movedFile.Name(), movedFile.Name()+"-new")
@@ -366,35 +368,35 @@ func TestDiff(t *testing.T) {
 		err = os.Link(linkedFile.Name(), linkedFile.Name()+"_hard")
 		ok(t, err)
 
-		inodeChanges, err := fs.Diff(snapshot.Name)
+		inodeChanges, err := fs.Diff(snapshot.(*zfs.Dataset).Name)
 		ok(t, err)
 		equals(t, 4, len(inodeChanges))
 
 		unicodePath := "/test/origin/i\x040\x1c2\x135\x144\x040unicode"
-		wants := map[string]*zfs.InodeChange{
-			"/test/origin/linked": &zfs.InodeChange{
-				Type:                 zfs.File,
-				Change:               zfs.Modified,
+		wants := map[string]*zfsiface.InodeChange{
+			"/test/origin/linked": &zfsiface.InodeChange{
+				Type:                 zfsiface.File,
+				Change:               zfsiface.Modified,
 				ReferenceCountChange: 1,
 			},
-			"/test/origin/file": &zfs.InodeChange{
-				Type:    zfs.File,
-				Change:  zfs.Renamed,
+			"/test/origin/file": &zfsiface.InodeChange{
+				Type:    zfsiface.File,
+				Change:  zfsiface.Renamed,
 				NewPath: "/test/origin/file-new",
 			},
-			"/test/origin/i ❤ unicode": &zfs.InodeChange{
+			"/test/origin/i ❤ unicode": &zfsiface.InodeChange{
 				Path:   "❤❤ unicode ❤❤",
-				Type:   zfs.File,
-				Change: zfs.Created,
+				Type:   zfsiface.File,
+				Change: zfsiface.Created,
 			},
-			unicodePath: &zfs.InodeChange{
+			unicodePath: &zfsiface.InodeChange{
 				Path:   "❤❤ unicode ❤❤",
-				Type:   zfs.File,
-				Change: zfs.Created,
+				Type:   zfsiface.File,
+				Change: zfsiface.Created,
 			},
-			"/test/origin/": &zfs.InodeChange{
-				Type:   zfs.Directory,
-				Change: zfs.Modified,
+			"/test/origin/": &zfsiface.InodeChange{
+				Type:   zfsiface.Directory,
+				Change: zfsiface.Modified,
 			},
 		}
 		for _, change := range inodeChanges {
@@ -413,7 +415,7 @@ func TestDiff(t *testing.T) {
 		ok(t, movedFile.Close())
 		ok(t, unicodeFile.Close())
 		ok(t, linkedFile.Close())
-		ok(t, snapshot.Destroy(zfs.DestroyForceUmount))
-		ok(t, fs.Destroy(zfs.DestroyForceUmount))
+		ok(t, snapshot.Destroy(zfsiface.DestroyForceUmount))
+		ok(t, fs.Destroy(zfsiface.DestroyForceUmount))
 	})
 }

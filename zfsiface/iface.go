@@ -2,23 +2,11 @@ package zfsiface
 
 import (
 	"io"
+	"time"
 )
 
 type Dataset interface {
-	//GetName() string
-	//GetOrigin() string
-	//GetUsed() uint64
-	//GetAvail() uint64
-	//GetMountPoint()string
-	//GetCompression() string
-	//GetType() string
-	//GetWritten() uint64
-	//GetVolsize() uint64
-	//GetLogicalused() uint64
-	//GetUsedbydataset() uint64
-	//GetQuota() uint64
-	//GetReferenced() uint64
-
+	GetNativeProperties() *NativeProperties
 	Clone(dest string, properties map[string]string) (Dataset, error)
 	Unmount(force bool) (Dataset, error)
 	Mount(overlay bool, options []string) (Dataset, error)
@@ -82,4 +70,21 @@ type InodeChange struct {
 	Path                 string
 	NewPath              string
 	ReferenceCountChange int
+}
+
+type NativeProperties struct {
+	Name          string
+	Origin        string
+	Used          uint64
+	Avail         uint64
+	Mountpoint    string
+	Compression   string
+	Type          string
+	Written       uint64
+	Volsize       uint64
+	Logicalused   uint64
+	Usedbydataset uint64
+	Quota         uint64
+	Referenced    uint64
+	Creation       time.Time
 }
