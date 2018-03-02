@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mistifyio/go-zfs"
+	"github.com/timaebi/go-zfs"
 	"strings"
 )
 
