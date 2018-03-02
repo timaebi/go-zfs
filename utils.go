@@ -13,7 +13,10 @@ import (
 
 	"github.com/pborman/uuid"
 	"github.com/timaebi/go-zfs/zfsiface"
+	"time"
 )
+
+const zfsTimeFormat = "Mon Jan _2 15:04 2006"
 
 type command struct {
 	Command string
@@ -93,6 +96,15 @@ func setUint(field *uint64, value string) error {
 	return nil
 }
 
+func setTime(field *time.Time, value string) error {
+	t, e := time.Parse(zfsTimeFormat, value)
+	if e != nil {
+		return e
+	}
+	*field = t
+	return nil
+}
+
 func (ds *Dataset) parseLine(line []string) error {
 	var err error
 
@@ -136,7 +148,9 @@ func (ds *Dataset) parseLine(line []string) error {
 	if err = setUint(&ds.Usedbydataset, line[12]); err != nil {
 		return err
 	}
-
+	if err = setTime(&ds.Creation, line[13]); err != nil {
+		return err
+	}
 	return nil
 }
 

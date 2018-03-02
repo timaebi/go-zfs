@@ -2,18 +2,17 @@ package zfs_test
 
 import (
 	"fmt"
+	"github.com/timaebi/go-zfs"
+	"github.com/timaebi/go-zfs/zfsiface"
 	"io/ioutil"
 	"math"
 	"os"
 	"path/filepath"
 	"reflect"
 	"runtime"
+	"strings"
 	"testing"
 	"time"
-
-	"github.com/timaebi/go-zfs"
-	"strings"
-	"github.com/timaebi/go-zfs/zfsiface"
 )
 
 func sleep(delay int) {
@@ -86,7 +85,7 @@ func TestDatasets(t *testing.T) {
 		ok(t, err)
 
 		ds, err := zfs.GetDataset("test")
-		np:= ds.GetNativeProperties()
+		np := ds.GetNativeProperties()
 		ok(t, err)
 		equals(t, zfs.DatasetFilesystem, np.Type)
 		equals(t, "", np.Origin)
@@ -417,5 +416,20 @@ func TestDiff(t *testing.T) {
 		ok(t, linkedFile.Close())
 		ok(t, snapshot.Destroy(zfsiface.DestroyForceUmount))
 		ok(t, fs.Destroy(zfsiface.DestroyForceUmount))
+	})
+}
+
+func TestDataset_GetNativeProperties(t *testing.T) {
+	zpoolTest(t, func() {
+		f, err := zfs.CreateFilesystem("test/filesystem-test", nil)
+		ok(t, err)
+
+		np := f.GetNativeProperties()
+		if time.Now().Sub(np.Creation) > time.Minute {
+			t.Fail()
+		}
+
+		equals(t, "test/filesystem-test", np.Name)
+		ok(t, f.Destroy(zfsiface.DestroyDefault))
 	})
 }

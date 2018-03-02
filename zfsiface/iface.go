@@ -86,5 +86,5 @@ type NativeProperties struct {
 	Usedbydataset uint64
 	Quota         uint64
 	Referenced    uint64
-	Creation       time.Time
+	Creation      time.Time
 }

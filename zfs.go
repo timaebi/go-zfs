@@ -4,10 +4,10 @@ package zfs
 import (
 	"errors"
 	"fmt"
+	"github.com/timaebi/go-zfs/zfsiface"
 	"io"
 	"strconv"
 	"strings"
-	"github.com/timaebi/go-zfs/zfsiface"
 )
 
 // ZFS dataset types, which can indicate if a dataset is a filesystem,
