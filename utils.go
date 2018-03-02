@@ -97,6 +97,12 @@ func setUint(field *uint64, value string) error {
 }
 
 func setTime(field *time.Time, value string) error {
+	re := regexp.MustCompile(`^\d{10}$`)
+	if re.MatchString(value) {
+		i, _ := strconv.ParseInt(value, 10, 64)
+		*field = time.Unix(i, 0)
+		return nil
+	}
 	t, e := time.Parse(zfsTimeFormat, value)
 	if e != nil {
 		return e
