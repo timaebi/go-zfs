@@ -190,15 +190,15 @@ func (d *Dataset) SendSnapshot(output io.Writer) error {
 
 // SendIncrementalSnapshot sends a ZFS stream of a incremental snapshot based on base to the input io.Writer.
 // An error will be returned if the input dataset, or base is not of snapshot type.
-func (d *Dataset) SendIncrementalSnapshot(base *Dataset, output io.Writer) error {
+func (d *Dataset) SendIncrementalSnapshot(base zfsiface.Dataset, output io.Writer) error {
 	if d.Type != DatasetSnapshot {
 		return errors.New("can only send snapshots")
 	}
-	if base.Type != DatasetSnapshot {
+	if base.GetNativeProperties().Type != DatasetSnapshot {
 		return errors.New("base needs to be a snapshot")
 	}
 	c := command{Command: "zfs", Stdout: output}
-	_, err := c.Run("send", "-i", base.Name, d.Name)
+	_, err := c.Run("send", "-i", base.GetNativeProperties().Name, d.Name)
 	return err
 }
 

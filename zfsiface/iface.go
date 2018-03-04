@@ -10,6 +10,7 @@ type Dataset interface {
 	Clone(dest string, properties map[string]string) (Dataset, error)
 	Unmount(force bool) (Dataset, error)
 	Mount(overlay bool, options []string) (Dataset, error)
+	SendIncrementalSnapshot(base Dataset, output io.Writer) error
 	SendSnapshot(output io.Writer) error
 	Destroy(flags DestroyFlag) error
 	SetProperty(key, val string) error
