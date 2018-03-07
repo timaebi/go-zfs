@@ -103,7 +103,7 @@ func TestDatasetGetProperty(t *testing.T) {
 		prop, ps, err := ds.GetProperty("foobarbaz")
 		nok(t, err)
 		equals(t, "", prop)
-		equals(t, zfsiface.Local, ps)
+		equals(t, zfsiface.Unknown, ps)
 
 		prop, _, err = ds.GetProperty("compression")
 		ok(t, err)
