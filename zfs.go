@@ -264,13 +264,19 @@ func (d *Dataset) SetProperty(key, val string) error {
 // receiving dataset.
 // A full list of available ZFS properties may be found here:
 // https://www.freebsd.org/cgi/man.cgi?zfs(8).
-func (d *Dataset) GetProperty(key string) (string, error) {
+func (d *Dataset) GetProperty(key string) (string, zfsiface.PropertySource, error) {
 	out, err := zfs("get", "-H", key, d.Name)
 	if err != nil {
-		return "", err
+		return "", zfsiface.Unknown, err
+	}
+	ps := zfsiface.Unknown
+	if out[0][3] == "local" {
+		ps = zfsiface.Local
+	} else if strings.HasPrefix(out[0][3], "inherited") {
+		ps = zfsiface.Inherited
 	}
 
-	return out[0][2], nil
+	return out[0][2], ps, nil
 }
 
 // Rename renames a dataset.

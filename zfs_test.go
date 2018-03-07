@@ -100,15 +100,16 @@ func TestDatasetGetProperty(t *testing.T) {
 		ds, err := zfs.GetDataset("test")
 		ok(t, err)
 
-		prop, err := ds.GetProperty("foobarbaz")
+		prop, ps, err := ds.GetProperty("foobarbaz")
 		nok(t, err)
 		equals(t, "", prop)
+		equals(t, zfsiface.Local, ps)
 
-		prop, err = ds.GetProperty("compression")
+		prop, _, err = ds.GetProperty("compression")
 		ok(t, err)
 		equals(t, "off", prop)
 
-		prop, err = ds.GetProperty("creation")
+		prop, _, err = ds.GetProperty("creation")
 		ok(t, err)
 		if len(strings.Fields(prop)) != 5 {
 			t.Errorf("expected a string with spaces in it, got: %v", prop)

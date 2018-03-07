@@ -5,6 +5,14 @@ import (
 	"time"
 )
 
+type PropertySource int
+
+const (
+	Local     PropertySource = iota
+	Inherited
+	Unknown
+)
+
 type Dataset interface {
 	GetNativeProperties() *NativeProperties
 	Clone(dest string, properties map[string]string) (Dataset, error)
@@ -14,7 +22,7 @@ type Dataset interface {
 	SendSnapshot(output io.Writer) error
 	Destroy(flags DestroyFlag) error
 	SetProperty(key, val string) error
-	GetProperty(key string) (string, error)
+	GetProperty(key string) (string, PropertySource, error)
 	Rename(name string, createParent bool, recursiveRenameSnapshots bool) (Dataset, error)
 	Snapshots() ([]Dataset, error)
 	Snapshot(name string, recursive bool) (Dataset, error)
